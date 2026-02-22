@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
         res.json({ success: true, settings });
     } catch (error) {
         console.error('Fetch settings error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Server error: ' + (error.message || error) });
     }
 });
 
@@ -44,7 +44,7 @@ router.put('/', authenticate, authorize('admin'), async (req, res) => {
         res.json({ success: true, message: 'Settings updated successfully', settings });
     } catch (error) {
         console.error('Update settings error:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Server error: ' + (error.message || error) });
     }
 });
 
