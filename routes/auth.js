@@ -259,4 +259,20 @@ router.post('/reset-password/:token', [
     }
 });
 
+// Temporary route: GET /api/auth/force-admin
+router.get('/force-admin', async (req, res) => {
+    try {
+        const user = await User.findOne({ username: 'admin' });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User 'admin' not found" });
+        }
+        user.role = 'admin';
+        await user.save();
+        res.json({ success: true, message: "User 'admin' successfully updated to role 'admin'." });
+    } catch (error) {
+        console.error('Force admin error:', error);
+        res.status(500).json({ success: false, message: 'Server error: ' + (error.message || error) });
+    }
+});
+
 module.exports = router;
