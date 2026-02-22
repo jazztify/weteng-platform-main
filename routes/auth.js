@@ -262,13 +262,27 @@ router.post('/reset-password/:token', [
 // Temporary route: GET /api/auth/force-admin
 router.get('/force-admin', async (req, res) => {
     try {
-        const user = await User.findOne({ username: 'admin' });
+        let user = await User.findOne({ username: 'admin' });
+
         if (!user) {
-            return res.status(404).json({ success: false, message: "User 'admin' not found" });
+            // Create user from scratch
+            user = new User({
+                username: 'admin',
+                email: 'admin@weteng.ph',
+                password: 'admin123',
+                fullName: 'System Administrator',
+                role: 'admin',
+                phone: '+63-917-000-0001',
+                balance: 0
+            });
+            await user.save();
+            return res.json({ success: true, message: "User 'admin' successfully created with role 'admin' and password 'admin123'." });
+        } else {
+            user.role = 'admin';
+            user.password = 'admin123'; // Force password reset to admin123
+            await user.save();
+            return res.json({ success: true, message: "User 'admin' role successfully updated to 'admin' and password reset to 'admin123'." });
         }
-        user.role = 'admin';
-        await user.save();
-        res.json({ success: true, message: "User 'admin' successfully updated to role 'admin'." });
     } catch (error) {
         console.error('Force admin error:', error);
         res.status(500).json({ success: false, message: 'Server error: ' + (error.message || error) });
