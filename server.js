@@ -16,12 +16,10 @@ const server = http.createServer(app);
 // Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'https://soft-llama-11069d.netlify.app',
-      process.env.CLIENT_URL
-    ].filter(Boolean),
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      return callback(null, origin);
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true
   }
@@ -34,12 +32,10 @@ app.set('io', io);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(morgan('dev'));
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'https://soft-llama-11069d.netlify.app',
-    process.env.CLIENT_URL
-  ].filter(Boolean),
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    return callback(null, origin);
+  },
   credentials: true
 }));
 app.use(express.json());
