@@ -1,0 +1,23 @@
+npm run dev - client
+node server.js - 
+
+ Administration & Finance
+Role	Username	Password
+Admin	admin	admin123
+Bankero	bankero1	bankero123
+
+ Team Operations (Cabos)
+Role	Username	Password
+Cabo 1 (North)	cabo1	cabo123
+Cabo 2 (South)	cabo2	cabo123
+
+ollection Hub (Kubradors)
+Role	Username	Password
+Kubrador 1	kubra1	kubra123
+Kubrador 2	kubra2	kubra123
+Kubrador 3	kubra3	kubra123
+
+Players (Manlalaro)
+Role	Username	Password
+Player 1	player1	player123
+Player 2	player2	player123

@@ -1,0 +1,5 @@
+[2026-02-21T17:59:17.332Z] EXECUTE ROUTE HIT! ID: 6998a854600d3c15263c2356 User: admin Body: undefined
+[2026-02-21T17:59:17.337Z] EXECUTE ERROR: Cannot read properties of undefined (reading 'num1')
+TypeError: Cannot read properties of undefined (reading 'num1')
+    at C:\xampp\htdocs\jueteng\routes\draws.js:167:22
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
