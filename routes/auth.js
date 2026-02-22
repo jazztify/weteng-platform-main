@@ -10,7 +10,7 @@ const { authenticate } = require('../middleware/auth');
 const generateToken = (user) => {
     return jwt.sign(
         { id: user._id, role: user.role, username: user.username },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET || 'fallback_secret_key_if_missing_in_env',
         { expiresIn: '24h' }
     );
 };

@@ -22,7 +22,7 @@ const authenticate = async (req, res, next) => {
             });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key_if_missing_in_env');
         const user = await User.findById(decoded.id);
 
         if (!user) {
