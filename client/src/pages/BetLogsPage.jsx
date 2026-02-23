@@ -37,7 +37,7 @@ export default function BetLogsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
                     <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700 }}>Bet History & Logs</h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>View all your digital papelitos</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>View all your digital receipts</p>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -46,7 +46,7 @@ export default function BetLogsPage() {
                         <input
                             type="text"
                             className="form-input"
-                            placeholder="Search Papelito or Name..."
+                            placeholder="Search Ref or Name..."
                             value={searchQuery}
                             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                             style={{ paddingLeft: '36px', width: '250px' }}
@@ -68,7 +68,7 @@ export default function BetLogsPage() {
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th>Papelito</th>
+                                    <th>Reference</th>
                                     <th>Date</th>
                                     <th>Numbers</th>
                                     <th>Amount</th>

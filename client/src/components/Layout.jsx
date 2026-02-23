@@ -129,7 +129,7 @@ export default function Layout() {
                 <div className="sidebar-brand">
                     <div className="brand-icon">W</div>
                     <div>
-                        <h1>WETENG</h1>
+                        <h1>ONLINE WETENG</h1>
                         <div className="brand-subtitle">Digital Platform</div>
                     </div>
                 </div>

@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children, roles }) => {
     return (
       <div className="loading-screen">
         <div className="spinner"></div>
-        <h2>WETENG</h2>
+        <h2>ONLINE WETENG</h2>
       </div>
     );
   }
@@ -43,7 +43,7 @@ const PublicRoute = ({ children }) => {
     return (
       <div className="loading-screen">
         <div className="spinner"></div>
-        <h2>WETENG</h2>
+        <h2>ONLINE WETENG</h2>
       </div>
     );
   }

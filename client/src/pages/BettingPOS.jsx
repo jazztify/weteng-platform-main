@@ -152,7 +152,7 @@ export default function BettingPOS() {
 
             Swal.fire({
                 title: 'Bet Placed! 🎰',
-                html: `<p style="color:#A09C97">Papelito: <strong style="color:#DA9101;font-family:monospace">${res.data.bet.papelito}</strong></p>`,
+                html: `<p style="color:#A09C97">Reference: <strong style="color:#DA9101;font-family:monospace">${res.data.bet.papelito}</strong></p>`,
                 icon: 'success',
                 timer: 1500,
                 showConfirmButton: false,
@@ -349,7 +349,7 @@ export default function BettingPOS() {
                         <div className="card-header">
                             <div>
                                 <div className="card-title">Recent Bets</div>
-                                <div className="card-subtitle">Your digital papelitos</div>
+                                <div className="card-subtitle">Your digital receipts</div>
                             </div>
                             <Receipt size={18} style={{ color: 'var(--gold)' }} />
                         </div>

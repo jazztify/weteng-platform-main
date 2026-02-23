@@ -58,7 +58,7 @@ export default function LoginPage() {
                 <div className="login-card">
                     <div className="login-header">
                         <div className="login-brand">W</div>
-                        <h1>WETENG</h1>
+                        <h1>ONLINE WETENG</h1>
                         <p>Premium Digital Numbers Game</p>
                     </div>
 

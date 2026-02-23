@@ -9,11 +9,11 @@ export default function ReceiptModal({ bet, onClose }) {
     };
 
     const handleShare = async () => {
-        const textToShare = `WETENG DIGITAL\nReceipt: ${bet.papelito}\nDate: ${new Date(bet.createdAt).toLocaleString('en-PH')}\nNumbers: ${bet.numbers.num1} - ${bet.numbers.num2}\nAmount: ₱${bet.amount}\nBettor: ${bet.bettorName || 'Walk-in'}`;
+        const textToShare = `ONLINE WETENG\nReceipt: ${bet.papelito}\nDate: ${new Date(bet.createdAt).toLocaleString('en-PH')}\nNumbers: ${bet.numbers.num1} - ${bet.numbers.num2}\nAmount: ₱${bet.amount}\nBettor: ${bet.bettorName || 'Walk-in'}`;
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: 'Weteng Bet Receipt',
+                    title: 'Online Weteng Bet Receipt',
                     text: textToShare,
                 });
             } catch (error) {
@@ -38,14 +38,14 @@ export default function ReceiptModal({ bet, onClose }) {
                 {/* Printable Area */}
                 <div id="print-area" className="thermal-receipt">
                     <div className="receipt-header">
-                        <h2>WETENG</h2>
+                        <h2>ONLINE WETENG</h2>
                         <p>Digital Platform</p>
                     </div>
 
                     <div className="receipt-divider"></div>
 
                     <div className="receipt-row">
-                        <span>Papelito:</span>
+                        <span>Ref No:</span>
                         <strong>{bet.papelito}</strong>
                     </div>
                     <div className="receipt-row">
@@ -87,7 +87,7 @@ export default function ReceiptModal({ bet, onClose }) {
 
                     <div className="receipt-footer">
                         <p>Betting strictly for adults.</p>
-                        <p>Keep this papelito safe.</p>
+                        <p>Keep this receipt safe for your records.</p>
                         <p className="barcode-placeholder">{bet.papelito}</p>
                     </div>
                 </div>

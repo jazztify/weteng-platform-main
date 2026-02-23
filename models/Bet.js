@@ -90,7 +90,7 @@ betSchema.pre('save', async function () {
     if (!this.papelito) {
         const timestamp = Date.now().toString(36).toUpperCase();
         const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-        this.papelito = `WTG-${timestamp}-${random}`;
+        this.papelito = `REF-${timestamp}-${random}`;
     }
 
     // Check for pompyang

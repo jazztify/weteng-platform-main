@@ -37,7 +37,7 @@ export default function RegisterPage() {
                 <div className="login-card">
                     <div className="login-header">
                         <div className="login-brand">W</div>
-                        <h1>WETENG</h1>
+                        <h1>ONLINE WETENG</h1>
                         <p>Create Your Account</p>
                     </div>
                     <form onSubmit={handleSubmit}>
