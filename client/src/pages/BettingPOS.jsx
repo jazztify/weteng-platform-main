@@ -3,8 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useSettings } from '../context/SettingsContext';
 import { getActiveDraws, placeBet, getBets } from '../api';
-import { Dices, RotateCcw, Send, Receipt, Trash2 } from 'lucide-react';
+import { Dices, RotateCcw, Send, Receipt, Trash2, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
+import BetReceiptModal from '../components/ReceiptModal';
 
 export default function BettingPOS() {
     const { user } = useAuth();
@@ -19,6 +20,7 @@ export default function BettingPOS() {
     const [recentBets, setRecentBets] = useState([]);
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1); // 1: select num1, 2: select num2
+    const [placedBetSlip, setPlacedBetSlip] = useState(null);
 
     useEffect(() => {
         loadDraws();
@@ -152,10 +154,12 @@ export default function BettingPOS() {
                 title: 'Bet Placed! 🎰',
                 html: `<p style="color:#A09C97">Papelito: <strong style="color:#DA9101;font-family:monospace">${res.data.bet.papelito}</strong></p>`,
                 icon: 'success',
-                timer: 2000,
+                timer: 1500,
                 showConfirmButton: false,
                 background: '#1E1E1F',
                 color: '#DA9101'
+            }).then(() => {
+                setPlacedBetSlip(res.data.bet);
             });
 
             resetSelection();
@@ -374,11 +378,14 @@ export default function BettingPOS() {
                                                 <span className={`number-ball ${bet.isPompyang ? 'pompyang' : ''}`} style={{ width: '36px', height: '36px', fontSize: '14px' }}>{bet.numbers.num2}</span>
                                             </div>
                                         </div>
-                                        <div className="papelito-footer">
+                                        <div className="papelito-footer" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px', marginBottom: '8px' }}>
                                             <span>₱{bet.amount}</span>
                                             <span>{bet.isPompyang ? '⚡ Pompyang' : 'Standard'}</span>
                                             <span style={{ color: 'var(--green-light)' }}>Win: ₱{bet.potentialPayout?.toLocaleString()}</span>
                                         </div>
+                                        <button className="btn btn-outline btn-sm w-full" onClick={() => setPlacedBetSlip(bet)}>
+                                            <Eye size={14} style={{ marginRight: '4px' }} /> View Slip
+                                        </button>
                                     </div>
                                 ))}
                             </div>
@@ -386,6 +393,8 @@ export default function BettingPOS() {
                     </div>
                 </div>
             </div>
+
+            {placedBetSlip && <BetReceiptModal bet={placedBetSlip} onClose={() => setPlacedBetSlip(null)} />}
         </div>
     );
 }

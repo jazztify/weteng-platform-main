@@ -1988,8 +1988,247 @@ a:hover {
   font-size: 14px;
 }
 
+/* ── Receipt Modal & Thermal Styles ── */
+.receipt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.receipt-modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+.receipt-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.receipt-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.thermal-receipt {
+  background: #FFF;
+  color: #000;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.receipt-header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.receipt-header h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.receipt-header p {
+  font-size: 11px;
+}
+
+.receipt-divider {
+  border-top: 1px dashed #000;
+  margin: 12px 0;
+}
+
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.receipt-row.total {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.receipt-numbers-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.receipt-number-pair {
+  display: flex;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.receipt-pompyang {
+  background: black;
+  color: white;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.receipt-footer {
+  text-align: center;
+  font-size: 10px;
+  margin-top: 16px;
+}
+
+.barcode-placeholder {
+  font-size: 20px;
+  margin-top: 8px;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 12px;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt-modal-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: white;
+  }
+
+  .thermal-receipt,
+  .thermal-receipt * {
+    visibility: visible;
+  }
+
+  .thermal-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 250px;
+    /* approximates 58-80mm thermal paper */
+    margin: 0;
+    padding: 10px;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ── UI Utilities ── */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.hamburger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 90;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay.open {
+    display: block;
+    opacity: 1;
+  }
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .topbar {
+    padding: 16px;
+  }
+
+  .page-content {
+    padding: 16px;
+  }
+
+  .data-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .btn {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+
+  .btn-sm {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .btn-lg {
+    padding: 16px 32px;
+  }
+
   .wr-ball {
     width: 72px;
     height: 72px;

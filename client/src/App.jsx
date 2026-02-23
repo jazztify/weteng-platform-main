@@ -16,6 +16,7 @@ import PlayerWalletPage from './pages/PlayerWalletPage';
 import WarRoomPage from './pages/WarRoomPage';
 import DepositApprovalsPage from './pages/DepositApprovalsPage';
 import SystemSettingsPage from './pages/SystemSettingsPage';
+import BetLogsPage from './pages/BetLogsPage';
 import Layout from './components/Layout';
 
 const ProtectedRoute = ({ children, roles }) => {
@@ -67,6 +68,7 @@ function AppRoutes() {
             <BettingPOS />
           </ProtectedRoute>
         } />
+        <Route path="bet-logs" element={<BetLogsPage />} />
         <Route path="draws" element={<DrawsPage />} />
         <Route path="admin/war-room" element={
           <ProtectedRoute roles={['admin']}>

@@ -45,6 +45,7 @@ export default function Layout() {
                 { path: '/admin/war-room', icon: Flame, label: 'Bolahan War Room' },
                 { path: '/draws', icon: CalendarClock, label: 'Draw Management' },
                 { path: '/betting', icon: Dices, label: 'Betting POS' },
+                { path: '/bet-logs', icon: Receipt, label: 'Bet Logs' },
                 { path: '/users', icon: Users, label: 'User Management' },
                 { path: '/admin/deposit-approvals', icon: ArrowDownCircle, label: 'Deposit Approvals' },
                 { path: '/remittances', icon: Send, label: 'Remittances' },
@@ -59,6 +60,7 @@ export default function Layout() {
                 { path: '/deposits', icon: ArrowDownCircle, label: 'Deposit Approvals' },
                 { path: '/remittances', icon: BadgeDollarSign, label: 'Remittance Inflow' },
                 { path: '/draws', icon: CalendarClock, label: 'Draw Schedule' },
+                { path: '/bet-logs', icon: Receipt, label: 'Platform Bet Logs' },
                 { path: '/users', icon: Users, label: 'Network Overview' },
                 { path: '/transactions', icon: Receipt, label: 'Financial Ledger' },
             ];
@@ -70,6 +72,7 @@ export default function Layout() {
                 { path: '/remittances', icon: CheckCircle2, label: 'Remittance Verify' },
                 { path: '/users', icon: Eye, label: 'Kubrador Monitoring' },
                 { path: '/draws', icon: CalendarClock, label: 'Draws' },
+                { path: '/bet-logs', icon: Receipt, label: 'Team Bet Logs' },
                 { path: '/transactions', icon: Receipt, label: 'Transactions' },
             ];
         }
@@ -78,6 +81,7 @@ export default function Layout() {
             return [
                 ...shared,
                 { path: '/betting', icon: Dices, label: 'Digital POS' },
+                { path: '/bet-logs', icon: Receipt, label: 'Bet History' },
                 { path: '/deposits', icon: ArrowDownCircle, label: 'Add / View Credit' },
                 { path: '/remittances', icon: Send, label: 'Submit Remittance' },
                 { path: '/draws', icon: CalendarClock, label: 'Draws' },
@@ -89,6 +93,7 @@ export default function Layout() {
             return [
                 ...shared,
                 { path: '/wallet', icon: Wallet, label: 'My Wallet' },
+                { path: '/bet-logs', icon: Receipt, label: 'My Bets' },
                 { path: '/draws', icon: CalendarClock, label: 'Draws' },
                 { path: '/transactions', icon: Receipt, label: 'History' },
             ];

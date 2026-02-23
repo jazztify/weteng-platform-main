@@ -151,7 +151,7 @@ router.post('/batch', authenticate, authorize('kubrador'), async (req, res) => {
 // GET /api/bets - Get bets with filters
 router.get('/', authenticate, async (req, res) => {
     try {
-        const { drawId, status, page = 1, limit = 50 } = req.query;
+        const { drawId, status, page = 1, limit = 50, search } = req.query;
         const filter = {};
 
         // Role-based filtering
@@ -163,6 +163,13 @@ router.get('/', authenticate, async (req, res) => {
 
         if (drawId) filter.drawId = drawId;
         if (status) filter.status = status;
+
+        if (search) {
+            filter.$or = [
+                { papelito: { $regex: search, $options: 'i' } },
+                { bettorName: { $regex: search, $options: 'i' } }
+            ];
+        }
 
         const bets = await Bet.find(filter)
             .populate('kubradorId', 'fullName username')
