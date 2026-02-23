@@ -289,4 +289,47 @@ router.get('/force-admin', async (req, res) => {
     }
 });
 
+// Temporary route: GET /api/auth/seed-all-roles
+router.get('/seed-all-roles', async (req, res) => {
+    try {
+        const rolesToSeed = [
+            { role: 'bankero', username: 'bankero_test', fullName: 'Don Ricardo Bankero', email: 'bankero_test@weteng.ph', balance: 500000 },
+            { role: 'cabo', username: 'cabo_test', fullName: 'Juan Cabo', email: 'cabo_test@weteng.ph', balance: 5000 },
+            { role: 'kubrador', username: 'kubra_test', fullName: 'Pedro Kubra', email: 'kubra_test@weteng.ph', balance: 1000 },
+            { role: 'player', username: 'player_test', fullName: 'Carlos Player', email: 'player_test@weteng.ph', balance: 500 }
+        ];
+
+        const results = { created: [], existing: [] };
+
+        for (const data of rolesToSeed) {
+            let user = await User.findOne({ role: data.role });
+            if (!user) {
+                user = new User({
+                    username: data.username,
+                    email: data.email,
+                    password: 'password123',
+                    fullName: data.fullName,
+                    role: data.role,
+                    phone: `+63-917-${Math.floor(1000000 + Math.random() * 9000000)}`,
+                    balance: data.balance
+                });
+                await user.save();
+                results.created.push({ role: data.role, username: data.username });
+            } else {
+                results.existing.push({ role: data.role, username: user.username });
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Seed check complete for all roles.',
+            data: results,
+            note: 'Default password for all new accounts is: password123'
+        });
+    } catch (error) {
+        console.error('Seed all roles error:', error);
+        res.status(500).json({ success: false, message: 'Server error: ' + (error.message || error) });
+    }
+});
+
 module.exports = router;

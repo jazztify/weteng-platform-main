@@ -25,6 +25,9 @@ export default function ReceiptModal({ bet, onClose }) {
         }
     };
 
+    const agentName = bet.kubradorId?.fullName || bet.kubrador?.fullName || 'System';
+    const displayAgent = (agentName.toLowerCase().includes('admin') || agentName === 'System') ? 'Main Station' : agentName;
+
     return (
         <div className="receipt-modal-backdrop">
             <div className="receipt-modal-content">
@@ -51,7 +54,7 @@ export default function ReceiptModal({ bet, onClose }) {
                     </div>
                     <div className="receipt-row">
                         <span>Agent/Station:</span>
-                        <span>{bet.kubrador?.fullName || 'System'}</span>
+                        <span>{displayAgent}</span>
                     </div>
                     <div className="receipt-row">
                         <span>Bettor Name:</span>
