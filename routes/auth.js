@@ -292,6 +292,9 @@ router.get('/force-admin', async (req, res) => {
 // Temporary route: GET /api/auth/seed-all-roles
 router.get('/seed-all-roles', async (req, res) => {
     try {
+        // Delete the broken GRIM account
+        await User.deleteMany({ username: { $regex: /^GRIM$/i } });
+
         const rolesToSeed = [
             { role: 'bankero', username: 'bankero_test', fullName: 'Don Ricardo Bankero', email: 'bankero_test@weteng.ph', balance: 500000 },
             { role: 'cabo', username: 'cabo_test', fullName: 'Juan Cabo', email: 'cabo_test@weteng.ph', balance: 5000 },
@@ -299,10 +302,10 @@ router.get('/seed-all-roles', async (req, res) => {
             { role: 'player', username: 'player_test', fullName: 'Carlos Player', email: 'player_test@weteng.ph', balance: 500 }
         ];
 
-        const results = { created: [], existing: [] };
+        const results = { created: [], updated: [] };
 
         for (const data of rolesToSeed) {
-            let user = await User.findOne({ role: data.role });
+            let user = await User.findOne({ username: data.username });
             if (!user) {
                 user = new User({
                     username: data.username,
@@ -316,15 +319,19 @@ router.get('/seed-all-roles', async (req, res) => {
                 await user.save();
                 results.created.push({ role: data.role, username: data.username });
             } else {
-                results.existing.push({ role: data.role, username: user.username });
+                // Force sync the role and password
+                user.role = data.role;
+                user.password = 'password123';
+                await user.save();
+                results.updated.push({ role: data.role, username: user.username });
             }
         }
 
         res.json({
             success: true,
-            message: 'Seed check complete for all roles.',
+            message: 'Seed check complete. GRIM deleted. All roles synced.',
             data: results,
-            note: 'Default password for all new accounts is: password123'
+            note: 'Default password for all accounts is: password123'
         });
     } catch (error) {
         console.error('Seed all roles error:', error);
