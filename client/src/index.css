@@ -2101,6 +2101,21 @@ a:hover {
   margin-top: 8px;
 }
 
+.barcode-wrapper {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 10px 0;
+  visibility: visible !important;
+}
+
+.barcode-wrapper svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
 .receipt-actions {
   display: flex;
   gap: 12px;
@@ -2122,8 +2137,11 @@ a:hover {
   }
 
   .thermal-receipt,
-  .thermal-receipt * {
-    visibility: visible;
+  .thermal-receipt *,
+  .barcode-wrapper,
+  .barcode-wrapper svg {
+    visibility: visible !important;
+    display: block !important;
   }
 
   .thermal-receipt {

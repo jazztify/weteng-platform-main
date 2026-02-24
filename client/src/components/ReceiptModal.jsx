@@ -1,5 +1,6 @@
 import React from 'react';
 import { Share, Printer, X } from 'lucide-react';
+import Barcode from 'react-barcode';
 
 export default function ReceiptModal({ bet, onClose }) {
     if (!bet) return null;
@@ -86,9 +87,20 @@ export default function ReceiptModal({ bet, onClose }) {
                     <div className="receipt-divider"></div>
 
                     <div className="receipt-footer">
+                        <div className="barcode-wrapper">
+                            <Barcode
+                                value={bet.papelito || 'REF-0000'}
+                                width={1}
+                                height={35}
+                                fontSize={12}
+                                displayValue={true}
+                                background="#ffffff"
+                                lineColor="#000000"
+                                margin={5}
+                            />
+                        </div>
                         <p>Betting strictly for adults.</p>
                         <p>Keep this receipt safe for your records.</p>
-                        <p className="barcode-placeholder">{bet.papelito}</p>
                     </div>
                 </div>
 
