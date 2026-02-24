@@ -86,18 +86,22 @@ export default function ReceiptModal({ bet, onClose }) {
 
                     <div className="receipt-divider"></div>
 
-                    <div className="receipt-footer">
-                        <div className="barcode-wrapper">
+                    <div className="receipt-footer" style={{ textAlign: 'left', marginTop: '20px' }}>
+                        <div className="barcode-wrapper" style={{ justifyContent: 'flex-start', margin: 0 }}>
                             <Barcode
                                 value={bet.papelito || 'REF-0000'}
-                                width={2}
-                                height={60}
-                                fontSize={12}
+                                width={1.5}
+                                height={70}
+                                fontSize={14}
+                                textMargin={8}
                                 displayValue={true}
                                 background="#ffffff"
                                 lineColor="#000000"
-                                margin={15}
+                                margin={0}
                             />
+                        </div>
+                        <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '16px', letterSpacing: '0.5px' }}>
+                            {bet.papelito || 'REF-0000'}
                         </div>
                     </div>
                 </div>
