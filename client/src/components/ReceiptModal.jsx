@@ -10,7 +10,7 @@ export default function ReceiptModal({ bet, onClose }) {
     };
 
     const handleShare = async () => {
-        const textToShare = `ONLINE WETENG\nReceipt: ${bet.papelito}\nDate: ${new Date(bet.createdAt).toLocaleString('en-PH')}\nNumbers: ${bet.numbers.num1} - ${bet.numbers.num2}\nAmount: ₱${bet.amount}\nBettor: ${bet.bettorName || 'Walk-in'}`;
+        const textToShare = `ONLINE WETENG\nReceipt: ${bet.papelito}\nDate: ${new Date(bet.createdAt || Date.now()).toLocaleString('en-PH')}\nNumbers: ${bet.numbers.num1} - ${bet.numbers.num2}\nAmount: ₱${bet.amount}\nBettor: ${bet.bettorName || 'Walk-in'}`;
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -51,7 +51,7 @@ export default function ReceiptModal({ bet, onClose }) {
                     </div>
                     <div className="receipt-row">
                         <span>Date:</span>
-                        <span>{new Date(bet.createdAt).toLocaleString('en-PH')}</span>
+                        <span>{new Date(bet.createdAt || Date.now()).toLocaleString('en-PH')}</span>
                     </div>
                     <div className="receipt-row">
                         <span>Agent/Station:</span>
@@ -90,17 +90,15 @@ export default function ReceiptModal({ bet, onClose }) {
                         <div className="barcode-wrapper">
                             <Barcode
                                 value={bet.papelito || 'REF-0000'}
-                                width={1}
-                                height={35}
+                                width={2}
+                                height={60}
                                 fontSize={12}
                                 displayValue={true}
                                 background="#ffffff"
                                 lineColor="#000000"
-                                margin={5}
+                                margin={15}
                             />
                         </div>
-                        <p>Betting strictly for adults.</p>
-                        <p>Keep this receipt safe for your records.</p>
                     </div>
                 </div>
 
