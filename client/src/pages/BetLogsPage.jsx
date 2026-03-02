@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getBets } from '../api';
-import { Receipt, Search } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
+import { Receipt, Search, Bell } from 'lucide-react';
 import BetReceiptModal from '../components/ReceiptModal';
 
 export default function BetLogsPage() {
+    const { socket } = useSocket();
     const [bets, setBets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [pagination, setPagination] = useState({});
     const [selectedBet, setSelectedBet] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [drawAlert, setDrawAlert] = useState(null);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -18,6 +21,26 @@ export default function BetLogsPage() {
 
         return () => clearTimeout(delayDebounceFn);
     }, [page, searchQuery]);
+
+    // Auto-update when a draw result is broadcasted
+    useEffect(() => {
+        if (!socket) return;
+        const handleDrawResult = (data) => {
+            // Show alert notification
+            setDrawAlert({
+                label: data.label || 'Draw',
+                winningNumbers: data.winningNumbers,
+                totalWinners: data.totalWinners,
+                totalPayout: data.totalPayout
+            });
+            // Auto-refresh bets list
+            loadBets();
+            // Auto-dismiss alert after 8 seconds
+            setTimeout(() => setDrawAlert(null), 8000);
+        };
+        socket.on('DRAW_RESULT', handleDrawResult);
+        return () => socket.off('DRAW_RESULT', handleDrawResult);
+    }, [socket, page, searchQuery]);
 
     const loadBets = async () => {
         setLoading(true);
@@ -54,6 +77,26 @@ export default function BetLogsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Draw Result Notification Banner */}
+            {drawAlert && (
+                <div className="draw-alert-banner" id="draw-result-alert">
+                    <div className="draw-alert-content">
+                        <Bell size={18} className="draw-alert-icon" />
+                        <div className="draw-alert-text">
+                            <strong>🎯 {drawAlert.label} — Results In!</strong>
+                            <span>
+                                Winning: <strong>{drawAlert.winningNumbers?.num1} - {drawAlert.winningNumbers?.num2}</strong>
+                                {' · '}
+                                {drawAlert.totalWinners} winner{drawAlert.totalWinners !== 1 ? 's' : ''}
+                                {' · '}
+                                ₱{(drawAlert.totalPayout || 0).toLocaleString()} payout
+                            </span>
+                        </div>
+                        <button className="draw-alert-close" onClick={() => setDrawAlert(null)}>✕</button>
+                    </div>
+                </div>
+            )}
 
             {loading ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><div className="spinner"></div></div>

@@ -1,40 +1,46 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { getDraws, executeDraw, getDrawWinners } from '../api';
-import { Zap, Trophy, Flame, RefreshCw, Crown, Skull, Target, AlertTriangle } from 'lucide-react';
+import { Flame, RefreshCw, Crown, Skull, Trophy, Target, AlertTriangle, History, Send, Hash, CheckCircle2 } from 'lucide-react';
 import Swal from 'sweetalert2';
-
-const TOTAL_NUMBERS = 37;
-const ANIMATION_DURATION = 4000; // 4 seconds total animation
-const CYCLE_INTERVAL_START = 40;  // ms between number changes (fast start)
-const CYCLE_INTERVAL_END = 250;   // ms between number changes (slow finish)
 
 export default function WarRoomPage() {
     const { user } = useAuth();
+    const { socket } = useSocket();
     const [draws, setDraws] = useState([]);
     const [selectedDraw, setSelectedDraw] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Animation state
-    const [isAnimating, setIsAnimating] = useState(false);
-    const [animBall1, setAnimBall1] = useState(null);
-    const [animBall2, setAnimBall2] = useState(null);
-    const [animPhase, setAnimPhase] = useState('idle'); // idle | spinning | reveal | done
-    const [finalNumbers, setFinalNumbers] = useState(null);
+    // Manual input state
+    const [num1, setNum1] = useState('');
+    const [num2, setNum2] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     // Winner state
     const [winners, setWinners] = useState(null);
     const [winnersLoading, setWinnersLoading] = useState(false);
 
-    const animRef = useRef(null);
+    // Draw result state (after submission)
+    const [drawResult, setDrawResult] = useState(null);
 
     useEffect(() => {
         loadDraws();
     }, []);
 
+    // Listen for real-time draw results
+    useEffect(() => {
+        if (!socket) return;
+        const handleDrawResult = () => {
+            loadDraws();
+        };
+        socket.on('DRAW_RESULT', handleDrawResult);
+        return () => socket.off('DRAW_RESULT', handleDrawResult);
+    }, [socket]);
+
     const loadDraws = async () => {
         try {
-            const res = await getDraws({ limit: 30 });
+            const res = await getDraws({ limit: 50 });
             setDraws(res.data.draws || []);
         } catch (err) {
             console.error('Failed to load draws:', err);
@@ -45,107 +51,8 @@ export default function WarRoomPage() {
 
     // Get locked draws that can be executed
     const lockedDraws = draws.filter(d => d.status === 'locked');
-    // Get settled draws (to view results)
-    const settledDraws = draws.filter(d => d.status === 'settled').slice(0, 10);
-
-    const randomNum = () => Math.floor(Math.random() * TOTAL_NUMBERS) + 1;
-
-    const runAnimation = useCallback((finalNum1, finalNum2) => {
-        setAnimPhase('spinning');
-        setIsAnimating(true);
-        setFinalNumbers(null);
-        setWinners(null);
-
-        const startTime = Date.now();
-        let phase = 1; // 1 = both spinning, 2 = ball1 locked, ball2 spinning
-
-        const animate = () => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
-
-            // Easing: start fast, end slow
-            const interval = CYCLE_INTERVAL_START + (CYCLE_INTERVAL_END - CYCLE_INTERVAL_START) * Math.pow(progress, 2);
-
-            if (progress < 0.5) {
-                // Phase 1: Both balls spinning
-                setAnimBall1(randomNum());
-                setAnimBall2(randomNum());
-            } else if (progress < 0.85) {
-                // Phase 2: Ball 1 locks in
-                if (phase === 1) {
-                    phase = 2;
-                    setAnimBall1(finalNum1);
-                    setAnimPhase('reveal');
-                }
-                setAnimBall2(randomNum());
-            } else if (progress >= 1) {
-                // Done: Ball 2 locks in
-                setAnimBall2(finalNum2);
-                setAnimPhase('done');
-                setFinalNumbers({ num1: finalNum1, num2: finalNum2 });
-                setIsAnimating(false);
-                return;
-            }
-
-            animRef.current = setTimeout(animate, interval);
-        };
-
-        animate();
-    }, []);
-
-    const handleStartDraw = async () => {
-        if (!selectedDraw) {
-            Swal.fire({
-                title: 'No Draw Selected',
-                text: 'Please select a locked draw first.',
-                icon: 'warning',
-                background: '#1a0a0a',
-                color: '#DA9101',
-                confirmButtonColor: '#DA9101'
-            });
-            return;
-        }
-
-        const confirm = await Swal.fire({
-            title: '⚡ Execute Bolahan?',
-            html: `<p style="color:#A09C97">This will generate winning numbers and settle all bets for:</p>
-                   <p style="color:#DA9101;font-weight:700;font-size:16px;margin-top:8px">${selectedDraw.label}</p>
-                   <p style="color:#6B6762;font-size:13px;margin-top:4px">${selectedDraw.totalBets || 0} bets · ₱${(selectedDraw.totalBetAmount || 0).toLocaleString()} pool</p>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: '🔥 START THE BOLAHAN',
-            confirmButtonColor: '#8B0001',
-            cancelButtonColor: '#333',
-            background: '#1a0a0a',
-            color: '#DA9101'
-        });
-
-        if (!confirm.isConfirmed) return;
-
-        try {
-            const res = await executeDraw(selectedDraw._id);
-            const result = res.data.result;
-
-            // Run the animation with the actual winning numbers
-            runAnimation(result.winningNumbers.num1, result.winningNumbers.num2);
-
-            // After animation completes, load winners
-            setTimeout(async () => {
-                await loadWinners(selectedDraw._id);
-                loadDraws(); // Refresh draw list
-            }, ANIMATION_DURATION + 500);
-
-        } catch (err) {
-            Swal.fire({
-                title: 'Draw Failed',
-                text: err.response?.data?.message || 'Failed to execute draw',
-                icon: 'error',
-                background: '#1a0a0a',
-                color: '#DA9101',
-                confirmButtonColor: '#8B0001'
-            });
-        }
-    };
+    // Get settled draws for history
+    const settledDraws = draws.filter(d => d.status === 'settled').sort((a, b) => new Date(b.settledAt || b.updatedAt) - new Date(a.settledAt || a.updatedAt));
 
     const loadWinners = async (drawId) => {
         setWinnersLoading(true);
@@ -160,22 +67,145 @@ export default function WarRoomPage() {
         }
     };
 
+    const handleSubmitDraw = async () => {
+        // Validate inputs
+        const n1 = parseInt(num1);
+        const n2 = parseInt(num2);
+
+        if (!selectedDraw) {
+            Swal.fire({
+                title: 'No Draw Selected',
+                text: 'Please select a locked draw first.',
+                icon: 'warning',
+                background: '#1a0a0a',
+                color: '#DA9101',
+                confirmButtonColor: '#DA9101'
+            });
+            return;
+        }
+
+        if (isNaN(n1) || isNaN(n2) || n1 < 1 || n1 > 37 || n2 < 1 || n2 > 37) {
+            Swal.fire({
+                title: 'Invalid Numbers',
+                text: 'Both numbers must be between 1 and 37.',
+                icon: 'error',
+                background: '#1a0a0a',
+                color: '#DA9101',
+                confirmButtonColor: '#8B0001'
+            });
+            return;
+        }
+
+        // Confirmation pop-up with total bet pool
+        const totalPool = selectedDraw.totalBetAmount || 0;
+        const totalBets = selectedDraw.totalBets || 0;
+
+        const confirm = await Swal.fire({
+            title: '⚠️ Confirm Draw Submission',
+            html: `
+                <div style="text-align:center; padding: 8px 0;">
+                    <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:20px;">
+                        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#DA9101,#F5B731);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#1a0a0a;box-shadow:0 0 25px rgba(218,145,1,0.5);">${n1}</div>
+                        <span style="color:#DA9101;font-size:28px;font-weight:700;">—</span>
+                        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#DA9101,#F5B731);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#1a0a0a;box-shadow:0 0 25px rgba(218,145,1,0.5);">${n2}</div>
+                    </div>
+                    <p style="color:#F2EDE7;font-size:15px;margin-bottom:6px;">Are you sure? This will calculate winners for all</p>
+                    <p style="color:#DA9101;font-size:28px;font-weight:800;margin:8px 0;">₱${totalPool.toLocaleString()}</p>
+                    <p style="color:#A09C97;font-size:13px;">in bets (${totalBets} total bet${totalBets !== 1 ? 's' : ''}).</p>
+                    <p style="color:#DA9101;font-weight:600;margin-top:12px;font-size:14px;">${selectedDraw.label}</p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '✅ Submit Draw Result',
+            confirmButtonColor: '#DA9101',
+            cancelButtonText: 'Cancel',
+            cancelButtonColor: '#333',
+            background: '#1a0a0a',
+            color: '#DA9101',
+            customClass: {
+                popup: 'swal-dark-popup'
+            }
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        setSubmitting(true);
+        try {
+            const res = await executeDraw(selectedDraw._id, { num1: n1, num2: n2 });
+            const result = res.data.result;
+            setDrawResult(result);
+
+            // Show success
+            Swal.fire({
+                title: '🎯 Draw Submitted!',
+                html: `
+                    <div style="text-align:center;">
+                        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0;">
+                            <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#DA9101,#F5B731);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#1a0a0a;">${result.winningNumbers.num1}</div>
+                            <span style="color:#DA9101;font-size:24px;font-weight:700;">—</span>
+                            <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#DA9101,#F5B731);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#1a0a0a;">${result.winningNumbers.num2}</div>
+                        </div>
+                        <p style="color:#4ade80;font-size:16px;font-weight:600;">${result.totalWinners} Winner${result.totalWinners !== 1 ? 's' : ''} · ₱${result.totalPayout.toLocaleString()} Payout</p>
+                    </div>
+                `,
+                icon: 'success',
+                timer: 4000,
+                showConfirmButton: true,
+                confirmButtonColor: '#DA9101',
+                background: '#1a0a0a',
+                color: '#DA9101'
+            });
+
+            // Load winners and refresh lists
+            await loadWinners(selectedDraw._id);
+            await loadDraws();
+            setNum1('');
+            setNum2('');
+
+        } catch (err) {
+            Swal.fire({
+                title: 'Draw Failed',
+                text: err.response?.data?.message || 'Failed to submit draw result',
+                icon: 'error',
+                background: '#1a0a0a',
+                color: '#DA9101',
+                confirmButtonColor: '#8B0001'
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const handleViewResults = async (draw) => {
         setSelectedDraw(draw);
-        setFinalNumbers(draw.winningNumbers);
-        setAnimPhase('done');
+        setDrawResult({
+            winningNumbers: draw.winningNumbers,
+            totalWinners: draw.totalWinners,
+            totalPayout: draw.totalPayout
+        });
         await loadWinners(draw._id);
     };
 
     const resetWarRoom = () => {
-        if (animRef.current) clearTimeout(animRef.current);
-        setIsAnimating(false);
-        setAnimBall1(null);
-        setAnimBall2(null);
-        setAnimPhase('idle');
-        setFinalNumbers(null);
-        setWinners(null);
         setSelectedDraw(null);
+        setNum1('');
+        setNum2('');
+        setWinners(null);
+        setDrawResult(null);
+    };
+
+    // Handle num input - only allow 1-37
+    const handleNumInput = (value, setter) => {
+        const cleaned = value.replace(/[^0-9]/g, '');
+        if (cleaned === '') {
+            setter('');
+            return;
+        }
+        const num = parseInt(cleaned);
+        if (num <= 37) {
+            setter(cleaned);
+        }
     };
 
     if (loading) {
@@ -196,7 +226,7 @@ export default function WarRoomPage() {
                     </div>
                     <div>
                         <h2 className="wr-title">Bolahan War Room</h2>
-                        <p className="wr-subtitle">Draw Execution & Settlement Control Center</p>
+                        <p className="wr-subtitle">Manual Draw Execution · Live Stream Based</p>
                     </div>
                 </div>
                 <div className="wr-header-right">
@@ -224,7 +254,7 @@ export default function WarRoomPage() {
                                     key={draw._id}
                                     className={`wr-draw-chip ${selectedDraw?._id === draw._id ? 'active' : ''}`}
                                     onClick={() => { resetWarRoom(); setSelectedDraw(draw); }}
-                                    disabled={isAnimating}
+                                    disabled={submitting}
                                 >
                                     <span className="chip-type">{draw.drawType}</span>
                                     <span className="chip-date">
@@ -237,98 +267,132 @@ export default function WarRoomPage() {
                         )}
                     </div>
                 </div>
-
-                {settledDraws.length > 0 && (
-                    <div className="wr-selector-section">
-                        <label className="wr-label" style={{ color: 'var(--text-muted)' }}>
-                            <Trophy size={14} /> View Past Results
-                        </label>
-                        <div className="wr-draw-chips">
-                            {settledDraws.map(draw => (
-                                <button
-                                    key={draw._id}
-                                    className={`wr-draw-chip settled ${selectedDraw?._id === draw._id ? 'active' : ''}`}
-                                    onClick={() => handleViewResults(draw)}
-                                    disabled={isAnimating}
-                                >
-                                    <span className="chip-type">{draw.drawType}</span>
-                                    <span className="chip-date">
-                                        {new Date(draw.drawDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
-                                    </span>
-                                    {draw.winningNumbers && (
-                                        <span className="chip-result">{draw.winningNumbers.num1}-{draw.winningNumbers.num2}</span>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
 
-            {/* Main Arena */}
-            <div className="wr-arena">
-                {/* Ball Display */}
-                <div className={`wr-ball-stage ${animPhase}`}>
-                    <div className="wr-stage-glow"></div>
-
-                    <div className="wr-ball-container">
-                        <div className={`wr-ball wr-ball-1 ${animPhase === 'spinning' ? 'spin' : ''} ${animPhase === 'reveal' || animPhase === 'done' ? 'locked' : ''}`}>
-                            <span>{animBall1 ?? '?'}</span>
-                        </div>
-                        <div className="wr-ball-separator">
-                            <span>—</span>
-                        </div>
-                        <div className={`wr-ball wr-ball-2 ${animPhase === 'spinning' || animPhase === 'reveal' ? 'spin' : ''} ${animPhase === 'done' ? 'locked' : ''}`}>
-                            <span>{animBall2 ?? '?'}</span>
-                        </div>
+            {/* ═══ Manual Input Section ═══ */}
+            <div className="wr-manual-section">
+                <div className="wr-manual-card">
+                    <div className="wr-manual-header">
+                        <Hash size={20} />
+                        <h3>Manual Draw Input</h3>
+                        <span className="wr-manual-badge">LIVE STREAM</span>
                     </div>
 
-                    {animPhase === 'done' && finalNumbers && (
-                        <div className="wr-result-label">
-                            <Crown size={18} />
-                            WINNING COMBINATION
-                        </div>
-                    )}
+                    {selectedDraw && selectedDraw.status === 'locked' ? (
+                        <>
+                            <p className="wr-manual-desc">
+                                Enter the winning numbers from the live stream draw for <strong>{selectedDraw.label}</strong>
+                            </p>
 
-                    {animPhase === 'idle' && (
-                        <div className="wr-idle-text">
-                            {selectedDraw
-                                ? 'Ready to execute. Press START THE BOLAHAN.'
-                                : 'Select a locked draw to begin.'
-                            }
-                        </div>
-                    )}
+                            <div className="wr-manual-inputs">
+                                <div className="wr-number-input-group">
+                                    <label>First Number</label>
+                                    <input
+                                        id="manual-num1"
+                                        type="text"
+                                        inputMode="numeric"
+                                        className="wr-number-input"
+                                        placeholder="00"
+                                        value={num1}
+                                        onChange={(e) => handleNumInput(e.target.value, setNum1)}
+                                        maxLength={2}
+                                        disabled={submitting}
+                                        autoComplete="off"
+                                    />
+                                    <span className="wr-number-range">1 – 37</span>
+                                </div>
 
-                    {(animPhase === 'spinning' || animPhase === 'reveal') && (
-                        <div className="wr-spinning-text">
-                            <div className="wr-pulse-dot"></div>
-                            {animPhase === 'spinning' ? 'Drawing numbers...' : 'First number locked!'}
+                                <div className="wr-number-separator">
+                                    <span>—</span>
+                                </div>
+
+                                <div className="wr-number-input-group">
+                                    <label>Second Number</label>
+                                    <input
+                                        id="manual-num2"
+                                        type="text"
+                                        inputMode="numeric"
+                                        className="wr-number-input"
+                                        placeholder="00"
+                                        value={num2}
+                                        onChange={(e) => handleNumInput(e.target.value, setNum2)}
+                                        maxLength={2}
+                                        disabled={submitting}
+                                        autoComplete="off"
+                                    />
+                                    <span className="wr-number-range">1 – 37</span>
+                                </div>
+                            </div>
+
+                            {/* Pool Info */}
+                            <div className="wr-pool-info">
+                                <div className="wr-pool-stat">
+                                    <span className="wr-pool-label">Total Bets</span>
+                                    <span className="wr-pool-value">{selectedDraw.totalBets || 0}</span>
+                                </div>
+                                <div className="wr-pool-divider"></div>
+                                <div className="wr-pool-stat">
+                                    <span className="wr-pool-label">Bet Pool</span>
+                                    <span className="wr-pool-value gold">₱{(selectedDraw.totalBetAmount || 0).toLocaleString()}</span>
+                                </div>
+                            </div>
+
+                            {/* Submit Button */}
+                            <button
+                                className="wr-submit-btn"
+                                onClick={handleSubmitDraw}
+                                disabled={submitting || !num1 || !num2}
+                                id="submit-draw-btn"
+                            >
+                                {submitting ? (
+                                    <>
+                                        <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></div>
+                                        <span>Processing Draw...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send size={20} />
+                                        <span>Submit Draw Result</span>
+                                    </>
+                                )}
+                            </button>
+                        </>
+                    ) : selectedDraw && selectedDraw.status === 'settled' ? (
+                        <div className="wr-result-display">
+                            <p className="wr-manual-desc" style={{ marginBottom: '16px' }}>
+                                Results for <strong>{selectedDraw.label}</strong>
+                            </p>
+                            {drawResult && drawResult.winningNumbers && (
+                                <div className="wr-result-numbers">
+                                    <div className="wr-result-ball">{drawResult.winningNumbers.num1}</div>
+                                    <span className="wr-result-dash">—</span>
+                                    <div className="wr-result-ball">{drawResult.winningNumbers.num2}</div>
+                                </div>
+                            )}
+                            {drawResult && (
+                                <div className="wr-result-stats">
+                                    <span className="wr-result-stat green">
+                                        <CheckCircle2 size={16} />
+                                        {drawResult.totalWinners || 0} Winner{(drawResult.totalWinners || 0) !== 1 ? 's' : ''}
+                                    </span>
+                                    <span className="wr-result-stat gold">
+                                        <Trophy size={16} />
+                                        ₱{(drawResult.totalPayout || 0).toLocaleString()} Payout
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="wr-manual-empty">
+                            <Target size={40} style={{ opacity: 0.2, marginBottom: '12px' }} />
+                            <p>Select a locked draw above to enter winning numbers.</p>
                         </div>
                     )}
                 </div>
-
-                {/* Start Draw Button */}
-                {animPhase === 'idle' && selectedDraw && selectedDraw.status === 'locked' && (
-                    <div className="wr-action-zone">
-                        <button
-                            className="wr-start-btn"
-                            onClick={handleStartDraw}
-                            disabled={isAnimating}
-                            id="start-draw-btn"
-                        >
-                            <Zap size={24} />
-                            <span>START THE BOLAHAN</span>
-                            <div className="wr-start-btn-glow"></div>
-                        </button>
-                        <p className="wr-action-hint">
-                            {selectedDraw.label} · {selectedDraw.totalBets || 0} bets · ₱{(selectedDraw.totalBetAmount || 0).toLocaleString()} pool
-                        </p>
-                    </div>
-                )}
             </div>
 
             {/* Winner Status Table */}
-            {(animPhase === 'done' || winnersLoading) && (
+            {(winners || winnersLoading) && (
                 <div className="wr-winners-section">
                     <div className="wr-winners-header">
                         <div className="wr-winners-title">
@@ -412,15 +476,93 @@ export default function WarRoomPage() {
                             <Skull size={48} />
                             <h3>No Winner</h3>
                             <p>No bets matched the winning combination for this draw.</p>
-                            {finalNumbers && (
-                                <p style={{ color: 'var(--gold)', marginTop: '8px', fontWeight: 600 }}>
-                                    Winning Numbers: {finalNumbers.num1} - {finalNumbers.num2}
-                                </p>
-                            )}
                         </div>
                     )}
                 </div>
             )}
+
+            {/* ═══ Draw History Table ═══ */}
+            <div className="wr-history-section">
+                <div className="wr-history-header">
+                    <div className="wr-history-title">
+                        <History size={20} />
+                        <h3>Draw History</h3>
+                    </div>
+                    <span className="wr-history-count">{settledDraws.length} past draw{settledDraws.length !== 1 ? 's' : ''}</span>
+                </div>
+
+                {settledDraws.length === 0 ? (
+                    <div className="wr-history-empty">
+                        <History size={40} style={{ opacity: 0.2, marginBottom: '12px' }} />
+                        <p>No completed draws yet.</p>
+                    </div>
+                ) : (
+                    <div className="data-table-wrapper">
+                        <table className="data-table" id="draw-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Draw</th>
+                                    <th>Winning Numbers</th>
+                                    <th>Total Bets</th>
+                                    <th>Pool</th>
+                                    <th>Winners</th>
+                                    <th>Payout</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {settledDraws.map(draw => (
+                                    <tr key={draw._id} className={`wr-history-row ${selectedDraw?._id === draw._id ? 'active' : ''}`}>
+                                        <td>
+                                            {new Date(draw.drawDate).toLocaleDateString('en-PH', {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: 'numeric'
+                                            })}
+                                        </td>
+                                        <td style={{ fontWeight: 600, color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                                            {draw.drawType}
+                                        </td>
+                                        <td>
+                                            {draw.winningNumbers ? (
+                                                <div className="number-pair" style={{ justifyContent: 'flex-start' }}>
+                                                    <span className="number-ball wr-history-ball">{draw.winningNumbers.num1}</span>
+                                                    <span className="separator">-</span>
+                                                    <span className="number-ball wr-history-ball">{draw.winningNumbers.num2}</span>
+                                                </div>
+                                            ) : (
+                                                <span style={{ color: 'var(--text-muted)' }}>—</span>
+                                            )}
+                                        </td>
+                                        <td>{draw.totalBets || 0}</td>
+                                        <td style={{ color: 'var(--gold)', fontWeight: 600 }}>
+                                            ₱{(draw.totalBetAmount || 0).toLocaleString()}
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${draw.totalWinners > 0 ? 'badge-green' : 'badge-gray'}`}>
+                                                {draw.totalWinners || 0}
+                                            </span>
+                                        </td>
+                                        <td style={{ color: draw.totalPayout > 0 ? 'var(--green-light)' : 'var(--text-muted)', fontWeight: draw.totalPayout > 0 ? 600 : 400 }}>
+                                            {draw.totalPayout > 0 ? `₱${draw.totalPayout.toLocaleString()}` : '—'}
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="btn btn-sm btn-outline"
+                                                onClick={() => handleViewResults(draw)}
+                                                id={`view-result-${draw._id}`}
+                                            >
+                                                <Trophy size={12} /> View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

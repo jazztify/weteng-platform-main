@@ -1988,6 +1988,472 @@ a:hover {
   font-size: 14px;
 }
 
+/* ═══ Manual Draw Input Section ═══ */
+.wr-manual-section {
+  margin-top: 24px;
+}
+
+.wr-manual-card {
+  background: linear-gradient(135deg, rgba(26, 10, 10, 0.95), rgba(30, 30, 31, 0.95));
+  border: 1px solid rgba(218, 145, 1, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.wr-manual-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.wr-manual-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: var(--gold);
+}
+
+.wr-manual-header h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wr-manual-badge {
+  margin-left: auto;
+  background: rgba(139, 0, 1, 0.3);
+  border: 1px solid rgba(139, 0, 1, 0.6);
+  color: #ff6b6b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.wr-manual-desc {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.wr-manual-desc strong {
+  color: var(--gold);
+}
+
+.wr-manual-inputs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.wr-number-input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.wr-number-input-group label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.wr-number-input {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid rgba(218, 145, 1, 0.4);
+  background: rgba(218, 145, 1, 0.06);
+  color: var(--gold);
+  font-size: 36px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  text-align: center;
+  outline: none;
+  transition: all 0.3s ease;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.wr-number-input::-webkit-outer-spin-button,
+.wr-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.wr-number-input::placeholder {
+  color: rgba(218, 145, 1, 0.2);
+  font-size: 30px;
+}
+
+.wr-number-input:focus {
+  border-color: var(--gold);
+  background: rgba(218, 145, 1, 0.1);
+  box-shadow: 0 0 30px rgba(218, 145, 1, 0.25), inset 0 0 15px rgba(218, 145, 1, 0.05);
+}
+
+.wr-number-range {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.wr-number-separator {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-top: 12px;
+}
+
+/* Pool Info */
+.wr-pool-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 24px;
+}
+
+.wr-pool-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.wr-pool-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.wr-pool-value {
+  font-size: 22px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+}
+
+.wr-pool-value.gold {
+  color: var(--gold);
+}
+
+.wr-pool-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border-subtle);
+}
+
+/* Submit Button */
+.wr-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, var(--gold), #F5B731);
+  color: #1a0a0a;
+  font-size: 16px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: 0.5px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.wr-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(218, 145, 1, 0.4);
+}
+
+.wr-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.wr-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Manual Empty State */
+.wr-manual-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.wr-manual-empty p {
+  font-size: 14px;
+}
+
+/* Result Display */
+.wr-result-display {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.wr-result-numbers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.wr-result-ball {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), #F5B731);
+  color: #1a0a0a;
+  font-size: 28px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(218, 145, 1, 0.4);
+}
+
+.wr-result-dash {
+  color: var(--gold);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.wr-result-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.wr-result-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.wr-result-stat.green {
+  color: var(--green-light);
+}
+
+.wr-result-stat.gold {
+  color: var(--gold);
+}
+
+/* ═══ Draw History Section ═══ */
+.wr-history-section {
+  margin-top: 32px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.wr-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.wr-history-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold);
+}
+
+.wr-history-title h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wr-history-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+}
+
+.wr-history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.wr-history-empty p {
+  font-size: 14px;
+}
+
+.wr-history-row {
+  transition: background 0.2s ease;
+}
+
+.wr-history-row:hover {
+  background: rgba(218, 145, 1, 0.04) !important;
+}
+
+.wr-history-row.active {
+  background: rgba(218, 145, 1, 0.08) !important;
+  border-left: 3px solid var(--gold);
+}
+
+.wr-history-ball {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 12px !important;
+}
+
+/* ═══ Draw Result Alert Banner (Bet Logs) ═══ */
+.draw-alert-banner {
+  margin-bottom: 20px;
+  animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.draw-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(218, 145, 1, 0.12), rgba(218, 145, 1, 0.05));
+  border: 1px solid rgba(218, 145, 1, 0.3);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--gold);
+}
+
+.draw-alert-icon {
+  color: var(--gold);
+  flex-shrink: 0;
+  animation: bellRing 0.8s ease-in-out;
+}
+
+@keyframes bellRing {
+
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  15% {
+    transform: rotate(15deg);
+  }
+
+  30% {
+    transform: rotate(-10deg);
+  }
+
+  45% {
+    transform: rotate(8deg);
+  }
+
+  60% {
+    transform: rotate(-5deg);
+  }
+}
+
+.draw-alert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.draw-alert-text strong {
+  font-size: 14px;
+  color: var(--gold);
+}
+
+.draw-alert-text span {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.draw-alert-text span strong {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.draw-alert-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.draw-alert-close:hover {
+  color: var(--text-primary);
+}
+
 /* ── Receipt Modal & Thermal Styles ── */
 .receipt-modal-backdrop {
   position: fixed;
@@ -2273,6 +2739,52 @@ a:hover {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .wr-number-input {
+    width: 80px;
+    height: 80px;
+    font-size: 28px;
+  }
+
+  .wr-manual-inputs {
+    gap: 12px;
+  }
+
+  .wr-number-separator {
+    font-size: 28px;
+  }
+
+  .wr-pool-info {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .wr-pool-divider {
+    width: 60%;
+    height: 1px;
+  }
+
+  .wr-manual-card {
+    padding: 20px;
+  }
+
+  .wr-history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .draw-alert-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .wr-result-ball {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2292,5 +2804,15 @@ a:hover {
 
   .wr-draw-chip {
     width: 100%;
+  }
+
+  .wr-number-input {
+    width: 70px;
+    height: 70px;
+    font-size: 24px;
+  }
+
+  .wr-result-numbers {
+    gap: 12px;
   }
 }
