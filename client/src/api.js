@@ -38,6 +38,7 @@ export const forgotPassword = (email) => api.post('/auth/forgot-password', { ema
 export const resetPassword = (token, password) => api.post(`/auth/reset-password/${token}`, { password });
 
 // Users
+export const createUser = (data) => api.post('/users', data);
 export const getUsers = (params) => api.get('/users', { params });
 export const getUserHierarchy = () => api.get('/users/hierarchy');
 export const getMyTeam = () => api.get('/users/my-team');

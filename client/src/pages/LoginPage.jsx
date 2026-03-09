@@ -126,8 +126,7 @@ export default function LoginPage() {
                     <div className="login-footer">
                         <Link to="/forgot-password">Forgot Password?</Link>
                         <div style={{ marginTop: '12px' }}>
-                            <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>New here? </span>
-                            <Link to="/register">Create Account</Link>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Need access? Contact an Administrator.</span>
                         </div>
                     </div>
                 </div>

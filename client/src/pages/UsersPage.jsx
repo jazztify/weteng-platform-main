@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getUsers, updateUser } from '../api';
+import { getUsers, updateUser, createUser } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Users as UsersIcon, Search, Shield, UserCheck, UserX, RefreshCw } from 'lucide-react';
+import { Users as UsersIcon, Search, Shield, UserCheck, UserX, RefreshCw, Plus, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function UsersPage() {
@@ -10,6 +10,11 @@ export default function UsersPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [creating, setCreating] = useState(false);
+    const [formData, setFormData] = useState({
+        username: '', email: '', password: '', fullName: '', role: 'kubrador', cell: '', phone: ''
+    });
 
     useEffect(() => {
         loadUsers();
@@ -59,6 +64,22 @@ export default function UsersPage() {
         }
     };
 
+    const handleCreateUser = async (e) => {
+        e.preventDefault();
+        setCreating(true);
+        try {
+            await createUser(formData);
+            Swal.fire({ title: 'User Created', icon: 'success', timer: 1500, showConfirmButton: false, background: '#1E1E1F', color: '#DA9101' });
+            setShowModal(false);
+            setFormData({ username: '', email: '', password: '', fullName: '', role: 'kubrador', cell: '', phone: '' });
+            loadUsers();
+        } catch (err) {
+            Swal.fire({ title: 'Error', text: err.response?.data?.message || 'Failed to create user.', icon: 'error', background: '#1E1E1F', color: '#DA9101', confirmButtonColor: '#8B0001' });
+        } finally {
+            setCreating(false);
+        }
+    };
+
     const getRoleIcon = (role) => {
         const icons = {
             admin: '👑',
@@ -87,8 +108,64 @@ export default function UsersPage() {
                     <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 700 }}>User Management</h3>
                     <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Manage kubradors, cabos, and bankeros</p>
                 </div>
-                <button className="btn btn-ghost btn-sm" onClick={loadUsers}><RefreshCw size={14} /> Refresh</button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="btn btn-ghost btn-sm" onClick={loadUsers}><RefreshCw size={14} /> Refresh</button>
+                    {user?.role === 'admin' && (
+                        <button className="btn btn-gold btn-sm" onClick={() => setShowModal(true)}>
+                            <Plus size={16} /> Add User
+                        </button>
+                    )}
+                </div>
             </div>
+
+            {/* Create User Modal */}
+            {showModal && (
+                <div className="receipt-modal-backdrop" style={{ zIndex: 1100 }}>
+                    <div className="receipt-modal-content" style={{ maxWidth: '500px', padding: '24px' }}>
+                        <button className="receipt-close-btn" onClick={() => setShowModal(false)}><X size={20} /></button>
+                        <h2 style={{ fontSize: '18px', marginBottom: '20px', color: 'var(--gold)', fontFamily: 'var(--font-display)' }}>Create New User</h2>
+
+                        <form onSubmit={handleCreateUser} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label">Full Name</label>
+                                <input type="text" className="form-input" required value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} placeholder="Juan Dela Cruz" />
+                            </div>
+                            <div className="grid-2">
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label">Username</label>
+                                    <input type="text" className="form-input" required value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label">Password</label>
+                                    <input type="text" className="form-input" required value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+                                </div>
+                            </div>
+                            <div className="grid-2">
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label">Email</label>
+                                    <input type="email" className="form-input" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label">Role</label>
+                                    <select className="form-select" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                                        <option value="kubrador">Kubrador</option>
+                                        <option value="cabo">Cabo</option>
+                                        <option value="bankero">Bankero</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                <label className="form-label">Station / Location (Cell)</label>
+                                <input type="text" className="form-input" value={formData.cell} onChange={e => setFormData({ ...formData, cell: e.target.value })} placeholder="Makati Branch, Online, etc." />
+                            </div>
+                            <button type="submit" className="btn btn-gold w-full" disabled={creating} style={{ marginTop: '10px' }}>
+                                {creating ? 'Creating...' : 'Create Account'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Filters */}
             <div className="card mb-3">

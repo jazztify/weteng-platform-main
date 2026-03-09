@@ -42,6 +42,51 @@ router.get('/', authenticate, authorize('admin', 'bankero'), async (req, res) =>
     }
 });
 
+// POST /api/users - Create User (Admin only)
+router.post('/', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { username, email, password, fullName, role, phone, parentId, cell } = req.body;
+
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: existingUser.email === email ? 'Email already registered' : 'Username already taken'
+            });
+        }
+
+        const user = new User({
+            username,
+            email,
+            password,
+            fullName,
+            role: role || 'kubrador',
+            phone,
+            parentId,
+            cell
+        });
+
+        await user.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'User created successfully',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                fullName: user.fullName,
+                role: user.role,
+                isActive: user.isActive,
+                createdAt: user.createdAt
+            }
+        });
+    } catch (error) {
+        console.error('Create user error:', error);
+        res.status(500).json({ success: false, message: 'Failed to create user' });
+    }
+});
+
 // GET /api/users/hierarchy - Get user hierarchy tree
 router.get('/hierarchy', authenticate, authorize('admin', 'bankero'), async (req, res) => {
     try {
