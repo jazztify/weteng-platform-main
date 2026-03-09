@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { getDraws, executeDraw, getDrawWinners } from '../api';
-import { Flame, RefreshCw, Crown, Skull, Trophy, Target, AlertTriangle, History, Send, Hash, CheckCircle2 } from 'lucide-react';
+import { getDraws, getDraw, executeDraw, getDrawWinners } from '../api';
+import { Flame, RefreshCw, Crown, Skull, Trophy, Target, AlertTriangle, History, Send, Hash, CheckCircle2, Radio, Lock } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function WarRoomPage() {
     const { user } = useAuth();
     const { socket } = useSocket();
+    const [searchParams] = useSearchParams();
     const [draws, setDraws] = useState([]);
     const [selectedDraw, setSelectedDraw] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -24,9 +26,42 @@ export default function WarRoomPage() {
     // Draw result state (after submission)
     const [drawResult, setDrawResult] = useState(null);
 
+    // Track if we've auto-selected from URL
+    const [autoSelected, setAutoSelected] = useState(false);
+
     useEffect(() => {
         loadDraws();
     }, []);
+
+    // Auto-select draw from URL query param after draws are loaded
+    useEffect(() => {
+        if (autoSelected || draws.length === 0) return;
+
+        const drawIdFromUrl = searchParams.get('drawId');
+        if (drawIdFromUrl) {
+            // Try to find the draw in our loaded list
+            const targetDraw = draws.find(d => d._id === drawIdFromUrl);
+            if (targetDraw) {
+                setSelectedDraw(targetDraw);
+                setAutoSelected(true);
+            } else {
+                // Draw not in list (maybe it was recently updated), fetch it directly
+                fetchAndSelectDraw(drawIdFromUrl);
+            }
+        }
+    }, [draws, searchParams, autoSelected]);
+
+    const fetchAndSelectDraw = async (drawId) => {
+        try {
+            const res = await getDraw(drawId);
+            if (res.data.draw) {
+                setSelectedDraw(res.data.draw);
+                setAutoSelected(true);
+            }
+        } catch (err) {
+            console.error('Failed to fetch draw from URL:', err);
+        }
+    };
 
     // Listen for real-time draw results
     useEffect(() => {
@@ -34,9 +69,22 @@ export default function WarRoomPage() {
         const handleDrawResult = () => {
             loadDraws();
         };
+        const handleDrawStatus = (data) => {
+            loadDraws();
+            // If the status update is for our selected draw, update it
+            if (selectedDraw && data.drawId === selectedDraw._id) {
+                setSelectedDraw(prev => prev ? { ...prev, status: data.status } : prev);
+            }
+        };
         socket.on('DRAW_RESULT', handleDrawResult);
-        return () => socket.off('DRAW_RESULT', handleDrawResult);
-    }, [socket]);
+        socket.on('draw_status', handleDrawStatus);
+        socket.on('DRAW_STARTING', handleDrawStatus);
+        return () => {
+            socket.off('DRAW_RESULT', handleDrawResult);
+            socket.off('draw_status', handleDrawStatus);
+            socket.off('DRAW_STARTING', handleDrawStatus);
+        };
+    }, [socket, selectedDraw]);
 
     const loadDraws = async () => {
         try {
@@ -49,8 +97,8 @@ export default function WarRoomPage() {
         }
     };
 
-    // Get locked draws that can be executed
-    const lockedDraws = draws.filter(d => d.status === 'locked');
+    // Get locked OR drawing draws that can be executed
+    const actionableDraws = draws.filter(d => d.status === 'locked' || d.status === 'drawing');
     // Get settled draws for history
     const settledDraws = draws.filter(d => d.status === 'settled').sort((a, b) => new Date(b.settledAt || b.updatedAt) - new Date(a.settledAt || a.updatedAt));
 
@@ -208,6 +256,9 @@ export default function WarRoomPage() {
         }
     };
 
+    // Check if selected draw is actionable (locked or drawing)
+    const isDrawActionable = selectedDraw && (selectedDraw.status === 'locked' || selectedDraw.status === 'drawing');
+
     if (loading) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
@@ -230,6 +281,12 @@ export default function WarRoomPage() {
                     </div>
                 </div>
                 <div className="wr-header-right">
+                    {selectedDraw && isDrawActionable && (
+                        <span className="badge badge-drawing" style={{ marginRight: '8px', fontSize: '13px', padding: '6px 14px' }}>
+                            <Radio size={14} style={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
+                            DRAWING — {selectedDraw.label}
+                        </span>
+                    )}
                     <button className="btn btn-ghost btn-sm" onClick={() => { resetWarRoom(); loadDraws(); }}>
                         <RefreshCw size={14} /> Reset
                     </button>
@@ -240,28 +297,38 @@ export default function WarRoomPage() {
             <div className="wr-selector-bar">
                 <div className="wr-selector-section">
                     <label className="wr-label">
-                        <Target size={14} /> Select Locked Draw
+                        <Target size={14} /> Select Draw
                     </label>
                     <div className="wr-draw-chips">
-                        {lockedDraws.length === 0 ? (
+                        {actionableDraws.length === 0 ? (
                             <div className="wr-empty-chip">
                                 <AlertTriangle size={14} />
-                                No locked draws available
+                                No locked or drawing draws available
                             </div>
                         ) : (
-                            lockedDraws.map(draw => (
+                            actionableDraws.map(draw => (
                                 <button
                                     key={draw._id}
-                                    className={`wr-draw-chip ${selectedDraw?._id === draw._id ? 'active' : ''}`}
+                                    className={`wr-draw-chip ${selectedDraw?._id === draw._id ? 'active' : ''} ${draw.status === 'drawing' ? 'drawing' : ''}`}
                                     onClick={() => { resetWarRoom(); setSelectedDraw(draw); }}
                                     disabled={submitting}
                                 >
+                                    <span className="chip-status-indicator">
+                                        {draw.status === 'drawing' ? (
+                                            <Radio size={12} style={{ color: '#ff6b6b', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                                        ) : (
+                                            <Lock size={12} style={{ color: '#DA9101' }} />
+                                        )}
+                                    </span>
                                     <span className="chip-type">{draw.drawType}</span>
                                     <span className="chip-date">
                                         {new Date(draw.drawDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}
                                     </span>
                                     <span className="chip-bets">{draw.totalBets || 0} bets</span>
                                     <span className="chip-pool">₱{(draw.totalBetAmount || 0).toLocaleString()}</span>
+                                    {draw.status === 'drawing' && (
+                                        <span className="chip-drawing-badge">LIVE</span>
+                                    )}
                                 </button>
                             ))
                         )}
@@ -275,10 +342,15 @@ export default function WarRoomPage() {
                     <div className="wr-manual-header">
                         <Hash size={20} />
                         <h3>Manual Draw Input</h3>
-                        <span className="wr-manual-badge">LIVE STREAM</span>
+                        {isDrawActionable && (
+                            <span className="wr-manual-badge drawing">
+                                <Radio size={12} style={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
+                                LIVE STREAM
+                            </span>
+                        )}
                     </div>
 
-                    {selectedDraw && selectedDraw.status === 'locked' ? (
+                    {selectedDraw && isDrawActionable ? (
                         <>
                             <p className="wr-manual-desc">
                                 Enter the winning numbers from the live stream draw for <strong>{selectedDraw.label}</strong>
@@ -298,6 +370,7 @@ export default function WarRoomPage() {
                                         maxLength={2}
                                         disabled={submitting}
                                         autoComplete="off"
+                                        autoFocus
                                     />
                                     <span className="wr-number-range">1 – 37</span>
                                 </div>
@@ -334,6 +407,14 @@ export default function WarRoomPage() {
                                 <div className="wr-pool-stat">
                                     <span className="wr-pool-label">Bet Pool</span>
                                     <span className="wr-pool-value gold">₱{(selectedDraw.totalBetAmount || 0).toLocaleString()}</span>
+                                </div>
+                                <div className="wr-pool-divider"></div>
+                                <div className="wr-pool-stat">
+                                    <span className="wr-pool-label">Status</span>
+                                    <span className="wr-pool-value" style={{ color: '#ff6b6b', fontSize: '14px' }}>
+                                        <Radio size={14} style={{ animation: 'pulse 1.5s ease-in-out infinite', marginRight: '4px' }} />
+                                        DRAWING
+                                    </span>
                                 </div>
                             </div>
 

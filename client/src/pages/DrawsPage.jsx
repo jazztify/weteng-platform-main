@@ -1,17 +1,42 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getDraws, createDraw, openDraw, lockDraw, executeDraw } from '../api';
-import { CalendarClock, Play, Lock, Zap, Plus, RefreshCw } from 'lucide-react';
+import { useSocket } from '../context/SocketContext';
+import { getDraws, createDraw, openDraw, lockDraw, startDrawing } from '../api';
+import { CalendarClock, Play, Lock, Zap, Plus, RefreshCw, Radio } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function DrawsPage() {
     const { user } = useAuth();
+    const { socket } = useSocket();
+    const navigate = useNavigate();
     const [draws, setDraws] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         loadDraws();
     }, []);
+
+    // Listen for real-time draw status changes
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleDrawStatus = () => {
+            loadDraws();
+        };
+
+        socket.on('draw_status', handleDrawStatus);
+        socket.on('DRAW_STARTING', handleDrawStatus);
+        socket.on('DRAW_RESULT', handleDrawStatus);
+        socket.on('LOCK_BETS', handleDrawStatus);
+
+        return () => {
+            socket.off('draw_status', handleDrawStatus);
+            socket.off('DRAW_STARTING', handleDrawStatus);
+            socket.off('DRAW_RESULT', handleDrawStatus);
+            socket.off('LOCK_BETS', handleDrawStatus);
+        };
+    }, [socket]);
 
     const loadDraws = async () => {
         try {
@@ -74,8 +99,7 @@ export default function DrawsPage() {
     const handleAction = async (drawId, action) => {
         const actions = {
             open: { fn: openDraw, title: 'Open Betting?', text: 'This will allow kubradors to place bets.', btn: 'Open Market' },
-            lock: { fn: lockDraw, title: 'Lock Bets?', text: 'No more bets will be accepted!', btn: 'Lock Bets' },
-            execute: { fn: executeDraw, title: 'Execute Draw?', text: 'This will generate winning numbers and settle all bets!', btn: 'Execute Bolahan' }
+            lock: { fn: lockDraw, title: 'Lock Bets?', text: 'No more bets will be accepted!', btn: 'Lock Bets' }
         };
 
         const cfg = actions[action];
@@ -85,7 +109,7 @@ export default function DrawsPage() {
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: cfg.btn,
-            confirmButtonColor: action === 'execute' ? '#8B0001' : '#DA9101',
+            confirmButtonColor: '#DA9101',
             cancelButtonColor: '#333',
             background: '#1E1E1F',
             color: '#DA9101'
@@ -110,11 +134,54 @@ export default function DrawsPage() {
         }
     };
 
+    // Handle the "Draw" button on a locked session → transition to DRAWING and navigate to War Room
+    const handleStartDrawing = async (draw) => {
+        const confirm = await Swal.fire({
+            title: 'Enter the War Room?',
+            html: `
+                <div style="text-align:center; padding: 8px 0;">
+                    <p style="color:#F2EDE7;font-size:15px;margin-bottom:10px;">You are about to start the draw for:</p>
+                    <p style="color:#DA9101;font-weight:700;font-size:20px;margin-bottom:12px;">${draw.label}</p>
+                    <div style="display:flex;justify-content:center;gap:20px;margin-bottom:10px;">
+                        <div style="text-align:center;">
+                            <span style="color:#A09C97;font-size:12px;display:block;">Total Bets</span>
+                            <span style="color:#F2EDE7;font-weight:700;font-size:18px;">${draw.totalBets || 0}</span>
+                        </div>
+                        <div style="text-align:center;">
+                            <span style="color:#A09C97;font-size:12px;display:block;">Bet Pool</span>
+                            <span style="color:#DA9101;font-weight:700;font-size:18px;">₱${(draw.totalBetAmount || 0).toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <p style="color:#ff6b6b;font-size:13px;margin-top:12px;">⚠ Status will change to DRAWING and other admins will be notified.</p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '🔥 Enter War Room',
+            confirmButtonColor: '#8B0001',
+            cancelButtonText: 'Cancel',
+            cancelButtonColor: '#333',
+            background: '#1E1E1F',
+            color: '#DA9101'
+        });
+
+        if (!confirm.isConfirmed) return;
+
+        try {
+            await startDrawing(draw._id);
+            // Navigate to War Room with the draw ID
+            navigate(`/admin/war-room?drawId=${draw._id}`);
+        } catch (err) {
+            Swal.fire({ title: 'Error', text: err.response?.data?.message || 'Failed to start drawing', icon: 'error', background: '#1E1E1F', color: '#DA9101', confirmButtonColor: '#8B0001' });
+        }
+    };
+
     const getStatusBadge = (status) => {
         const map = {
             upcoming: 'badge-gray',
             open: 'badge-green',
             locked: 'badge-gold',
+            drawing: 'badge-drawing',
             drawn: 'badge-red',
             settled: 'badge-red',
             cancelled: 'badge-gray'
@@ -122,6 +189,7 @@ export default function DrawsPage() {
         return <span className={`badge ${map[status] || 'badge-gray'}`}>
             <span className={`status-dot ${status}`}></span>
             {status.toUpperCase()}
+            {status === 'drawing' && <Radio size={12} style={{ marginLeft: '4px', animation: 'pulse 1.5s ease-in-out infinite' }} />}
         </span>;
     };
 
@@ -200,8 +268,17 @@ export default function DrawsPage() {
                                                 </button>
                                             )}
                                             {draw.status === 'locked' && (
-                                                <button className="btn btn-sm btn-red" onClick={() => handleAction(draw._id, 'execute')}>
+                                                <button className="btn btn-sm btn-red" onClick={() => handleStartDrawing(draw)} id={`start-drawing-${draw._id}`}>
                                                     <Zap size={12} /> Draw
+                                                </button>
+                                            )}
+                                            {draw.status === 'drawing' && (
+                                                <button
+                                                    className="btn btn-sm btn-drawing"
+                                                    onClick={() => navigate(`/admin/war-room?drawId=${draw._id}`)}
+                                                    id={`enter-warroom-${draw._id}`}
+                                                >
+                                                    <Radio size={12} /> War Room
                                                 </button>
                                             )}
                                         </div>

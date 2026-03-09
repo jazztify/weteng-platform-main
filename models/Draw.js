@@ -26,7 +26,7 @@ const drawSchema = new mongoose.Schema({
     // Draw status
     status: {
         type: String,
-        enum: ['upcoming', 'open', 'locked', 'drawn', 'settled', 'cancelled'],
+        enum: ['upcoming', 'open', 'locked', 'drawing', 'drawn', 'settled', 'cancelled'],
         default: 'upcoming'
     },
     // Provably fair - pre-draw hash

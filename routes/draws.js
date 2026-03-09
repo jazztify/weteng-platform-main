@@ -144,6 +144,40 @@ router.put('/:id/lock', authenticate, authorize('admin'), async (req, res) => {
     }
 });
 
+// PUT /api/draws/:id/start-drawing - Transition to DRAWING status (Admin enters War Room)
+router.put('/:id/start-drawing', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const draw = await Draw.findById(req.params.id);
+        if (!draw) return res.status(404).json({ success: false, message: 'Draw not found' });
+
+        if (draw.status !== 'locked') {
+            return res.status(400).json({ success: false, message: 'Can only start drawing on a locked draw' });
+        }
+
+        draw.status = 'drawing';
+        await draw.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('DRAW_STARTING', {
+                drawId: draw._id,
+                label: draw.label,
+                status: 'drawing'
+            });
+            io.emit('draw_status', { drawId: draw._id, status: 'drawing', label: draw.label });
+        }
+
+        res.json({
+            success: true,
+            message: 'Draw is now in DRAWING mode. Enter the War Room.',
+            draw
+        });
+    } catch (error) {
+        console.error('Start drawing error:', error);
+        res.status(500).json({ success: false, message: 'Failed to start drawing' });
+    }
+});
+
 // PUT /api/draws/:id/execute - Execute the bolahan (draw)
 // Refactored: winning numbers are saved to DB BEFORE payout logic
 router.put('/:id/execute', authenticate, authorize('admin'), async (req, res) => {
@@ -154,8 +188,8 @@ router.put('/:id/execute', authenticate, authorize('admin'), async (req, res) =>
             return res.status(404).json({ success: false, message: 'Draw not found' });
         }
 
-        if (draw.status !== 'locked') {
-            return res.status(400).json({ success: false, message: 'Draw must be locked before executing' });
+        if (draw.status !== 'locked' && draw.status !== 'drawing') {
+            return res.status(400).json({ success: false, message: 'Draw must be locked or in drawing mode before executing' });
         }
 
         // ── Step 2: Generate or set winning numbers ──
@@ -309,7 +343,7 @@ router.get('/active', authenticate, async (req, res) => {
 
         const draws = await Draw.find({
             drawDate: { $gte: today, $lt: tomorrow },
-            status: { $in: ['upcoming', 'open', 'locked'] }
+            status: { $in: ['upcoming', 'open', 'locked', 'drawing'] }
         }).sort({ scheduledTime: 1 });
 
         res.json({ success: true, draws });

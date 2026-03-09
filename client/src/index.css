@@ -651,6 +651,30 @@ a:hover {
   transform: none !important;
 }
 
+.btn-drawing {
+  background: linear-gradient(135deg, #C62828, #ff6b6b);
+  color: white;
+  box-shadow: 0 4px 15px rgba(198, 40, 40, 0.3);
+  animation: btn-drawing-glow 2s ease-in-out infinite;
+}
+
+.btn-drawing:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 25px rgba(198, 40, 40, 0.5);
+}
+
+@keyframes btn-drawing-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 4px 15px rgba(198, 40, 40, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 4px 25px rgba(198, 40, 40, 0.5), 0 0 40px rgba(255, 107, 107, 0.15);
+  }
+}
+
 /* ============================================
    FORM CONTROLS
    ============================================ */
@@ -807,6 +831,44 @@ a:hover {
   border: 1px solid rgba(160, 156, 151, 0.15);
 }
 
+.badge-drawing {
+  background: rgba(255, 60, 60, 0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 60, 60, 0.3);
+  animation: drawing-badge-pulse 2s ease-in-out infinite;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@keyframes drawing-badge-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(255, 60, 60, 0.2);
+    border-color: rgba(255, 60, 60, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(255, 60, 60, 0.4);
+    border-color: rgba(255, 60, 60, 0.6);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+}
+
 /* Status indicators */
 .status-dot {
   width: 8px;
@@ -823,6 +885,26 @@ a:hover {
 .status-dot.locked {
   background: var(--gold);
   box-shadow: 0 0 6px var(--gold-glow);
+}
+
+.status-dot.drawing {
+  background: #ff6b6b;
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
+  animation: drawing-dot-blink 1s ease-in-out infinite;
+}
+
+@keyframes drawing-dot-blink {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(255, 107, 107, 0.6);
+  }
+
+  50% {
+    opacity: 0.4;
+    box-shadow: 0 0 16px rgba(255, 107, 107, 0.8);
+  }
 }
 
 .status-dot.drawn {
@@ -1651,6 +1733,35 @@ a:hover {
   font-style: italic;
 }
 
+.wr-draw-chip.drawing {
+  border-color: rgba(255, 60, 60, 0.4);
+  background: rgba(255, 60, 60, 0.06);
+}
+
+.wr-draw-chip.drawing:hover,
+.wr-draw-chip.drawing.active {
+  border-color: #ff6b6b;
+  background: rgba(255, 60, 60, 0.12);
+  box-shadow: 0 0 20px rgba(255, 60, 60, 0.15);
+}
+
+.chip-status-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.chip-drawing-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255, 60, 60, 0.25);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 60, 60, 0.4);
+  animation: livePulse 2s ease-in-out infinite;
+}
+
 /* ── Arena / Ball Stage ── */
 .wr-arena {
   display: flex;
@@ -2038,6 +2149,15 @@ a:hover {
   padding: 4px 12px;
   border-radius: 20px;
   animation: livePulse 2s ease-in-out infinite;
+}
+
+.wr-manual-badge.drawing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 60, 60, 0.2);
+  border-color: rgba(255, 60, 60, 0.5);
+  box-shadow: 0 0 15px rgba(255, 60, 60, 0.15);
 }
 
 @keyframes livePulse {
