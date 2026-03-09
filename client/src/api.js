@@ -59,6 +59,7 @@ export const getActiveDraws = () => api.get('/draws/active');
 export const getDraw = (id) => api.get(`/draws/${id}`);
 export const openDraw = (id) => api.put(`/draws/${id}/open`);
 export const lockDraw = (id) => api.put(`/draws/${id}/lock`);
+export const unlockDraw = (id) => api.put(`/draws/${id}/unlock`);
 export const startDrawing = (id) => api.put(`/draws/${id}/start-drawing`);
 export const executeDraw = (id, data) => api.put(`/draws/${id}/execute`, data);
 export const getDrawWinners = (id) => api.get(`/draws/${id}/winners`);

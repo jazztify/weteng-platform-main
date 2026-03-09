@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { getDraws, createDraw, openDraw, lockDraw, startDrawing } from '../api';
-import { CalendarClock, Play, Lock, Zap, Plus, RefreshCw, Radio } from 'lucide-react';
+import { getDraws, createDraw, openDraw, lockDraw, unlockDraw, startDrawing } from '../api';
+import { CalendarClock, Play, Lock, Zap, Plus, RefreshCw, Radio, Unlock } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 export default function DrawsPage() {
@@ -92,14 +92,40 @@ export default function DrawsPage() {
             Swal.fire({ title: 'Draw Created!', icon: 'success', timer: 1500, showConfirmButton: false, background: '#1E1E1F', color: '#DA9101' });
             loadDraws();
         } catch (err) {
-            Swal.fire({ title: 'Error', text: err.response?.data?.message || 'Failed', icon: 'error', background: '#1E1E1F', color: '#DA9101', confirmButtonColor: '#8B0001' });
+            if (err.response?.data?.existingId) {
+                const action = await Swal.fire({
+                    title: 'Draw Already Exists',
+                    html: `A <b>${formValues.drawType}</b> draw for this date already exists with status: <b>${err.response.data.existingStatus.toUpperCase()}</b>.<br><br>Would you like to Re-open it?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Re-open it',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#DA9101',
+                    cancelButtonColor: '#333',
+                    background: '#1E1E1F',
+                    color: '#DA9101'
+                });
+
+                if (action.isConfirmed) {
+                    try {
+                        await unlockDraw(err.response.data.existingId);
+                        Swal.fire({ title: 'Re-opened!', icon: 'success', timer: 1500, showConfirmButton: false, background: '#1E1E1F', color: '#DA9101' });
+                        loadDraws();
+                    } catch (unlockErr) {
+                        Swal.fire({ title: 'Error', text: unlockErr.response?.data?.message || 'Failed to re-open', icon: 'error', background: '#1E1E1F', color: '#DA9101', confirmButtonColor: '#8B0001' });
+                    }
+                }
+            } else {
+                Swal.fire({ title: 'Error', text: err.response?.data?.message || 'Failed', icon: 'error', background: '#1E1E1F', color: '#DA9101', confirmButtonColor: '#8B0001' });
+            }
         }
     };
 
     const handleAction = async (drawId, action) => {
         const actions = {
             open: { fn: openDraw, title: 'Open Betting?', text: 'This will allow kubradors to place bets.', btn: 'Open Market' },
-            lock: { fn: lockDraw, title: 'Lock Bets?', text: 'No more bets will be accepted!', btn: 'Lock Bets' }
+            lock: { fn: lockDraw, title: 'Lock Bets?', text: 'No more bets will be accepted!', btn: 'Lock Bets' },
+            unlock: { fn: unlockDraw, title: 'Unlock Bets?', text: 'This will re-open betting for this draw.', btn: 'Unlock Bets' }
         };
 
         const cfg = actions[action];
@@ -268,9 +294,14 @@ export default function DrawsPage() {
                                                 </button>
                                             )}
                                             {draw.status === 'locked' && (
-                                                <button className="btn btn-sm btn-red" onClick={() => handleStartDrawing(draw)} id={`start-drawing-${draw._id}`}>
-                                                    <Zap size={12} /> Draw
-                                                </button>
+                                                <>
+                                                    <button className="btn btn-sm btn-red" onClick={() => handleStartDrawing(draw)} id={`start-drawing-${draw._id}`}>
+                                                        <Zap size={12} /> Draw
+                                                    </button>
+                                                    <button className="btn btn-sm btn-outline" onClick={() => handleAction(draw._id, 'unlock')}>
+                                                        <Unlock size={12} /> Unlock
+                                                    </button>
+                                                </>
                                             )}
                                             {draw.status === 'drawing' && (
                                                 <button

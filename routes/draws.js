@@ -12,16 +12,23 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     try {
         const { drawType, drawDate, scheduledTime } = req.body;
 
-        // Check for duplicate
+        // Check for duplicate in the same day (ignoring exact time)
+        const startOfDay = new Date(drawDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(drawDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
         const existing = await Draw.findOne({
             drawType,
-            drawDate: new Date(drawDate).toISOString().split('T')[0]
+            drawDate: { $gte: startOfDay, $lte: endOfDay }
         });
 
         if (existing) {
             return res.status(400).json({
                 success: false,
-                message: `${drawType} draw already exists for this date`
+                message: `${drawType} draw already exists for this date`,
+                existingId: existing._id,
+                existingStatus: existing.status
             });
         }
 
@@ -141,6 +148,35 @@ router.put('/:id/lock', authenticate, authorize('admin'), async (req, res) => {
     } catch (error) {
         console.error('Lock draw error:', error);
         res.status(500).json({ success: false, message: 'Failed to lock draw' });
+    }
+});
+
+// PUT /api/draws/:id/unlock - Re-open a draw (Unlock Bets)
+router.put('/:id/unlock', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const draw = await Draw.findById(req.params.id);
+        if (!draw) return res.status(404).json({ success: false, message: 'Draw not found' });
+
+        if (draw.status === 'open') {
+            return res.status(400).json({ success: false, message: 'Draw is already open' });
+        }
+
+        draw.status = 'open';
+        await draw.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('draw_status', { drawId: draw._id, status: 'open', label: draw.label });
+        }
+
+        res.json({
+            success: true,
+            message: 'Bets UNLOCKED. Market is re-opened.',
+            draw
+        });
+    } catch (error) {
+        console.error('Unlock draw error:', error);
+        res.status(500).json({ success: false, message: 'Failed to unlock draw' });
     }
 });
 
