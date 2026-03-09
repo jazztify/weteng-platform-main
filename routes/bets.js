@@ -106,7 +106,9 @@ router.post('/', authenticate, authorize('kubrador', 'cabo', 'admin'), [
                 isPompyang: bet.isPompyang,
                 potentialPayout: bet.potentialPayout,
                 commission: bet.commissions.kubrador,
-                status: bet.status
+                status: bet.status,
+                bettorName: bet.bettorName,
+                createdAt: bet.createdAt
             }
         });
     } catch (error) {
