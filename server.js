@@ -72,11 +72,9 @@ app.use('/api/remittances', remittanceRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/settings', settingsRoutes);
 
-// Root - Redirect to Frontend UI
+// Root Endpoint - Display API Status
 app.get('/', (req, res) => {
-  // Gracefully redirect anyone visiting the bare API URL to the actual Frontend application
-  const clientUrl = process.env.CLIENT_URL || 'https://your-frontend-url.vercel.app';
-  res.redirect(301, clientUrl);
+  res.json({ success: true, message: 'Weteng API Backend is running online!', environment: process.env.NODE_ENV });
 });
 
 app.get('/api/health', (req, res) => {
