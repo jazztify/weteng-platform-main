@@ -12,7 +12,6 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         const SOCKET_URL = import.meta.env.VITE_API_URL || '/';
         const socket = io(SOCKET_URL, {
-            transports: ['websocket', 'polling'],
             reconnection: true,
             reconnectionDelay: 1000
         });
