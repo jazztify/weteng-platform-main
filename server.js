@@ -108,9 +108,14 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🎰 Weteng Platform Server running on port ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
 
-module.exports = { app, server, io };
+// Vercel handles the port binding automatically and uses `module.exports = app` for serverless mode
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`🎰 Weteng Platform Server running on port ${PORT}`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
+
+// Export app natively for Vercel
+module.exports = app;
