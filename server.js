@@ -72,7 +72,11 @@ app.use('/api/remittances', remittanceRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/settings', settingsRoutes);
 
-// Health Check
+// Health Check & Root
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'Weteng API Backend is running online!', environment: process.env.NODE_ENV });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', platform: 'Weteng Digital', timestamp: new Date() });
 });
